@@ -1,0 +1,2917 @@
+<!DOCTYPE html>
+<html lang="si" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Outdoor DJ Bus Party — Powered by Automaker</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Gemunu+Libre:wght@700;800&family=Inter:wght@500;600;700;800;900&family=Noto+Sans+Sinhala:wght@700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #090d16 65%, #020617 100%);
+      color: #f8fafc;
+      font-family: 'Inter', 'Noto Sans Sinhala', sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .font-arcade {
+      font-family: 'Bungee', 'Gemunu Libre', cursive;
+    }
+
+    .font-sinhala {
+      font-family: 'Noto Sans Sinhala', 'Gemunu Libre', sans-serif;
+    }
+
+    /* 16:9 Widescreen Arcade Stage Frame matching the reference illustration */
+    .stage-wrapper {
+      position: relative;
+      width: min(98vw, 1140px);
+      height: min(82vh, 642px);
+      aspect-ratio: 16 / 9;
+      border-radius: 22px;
+      padding: 5px;
+      background: linear-gradient(135deg, #ec4899 0%, #f59e0b 45%, #22d3ee 100%);
+      box-shadow:
+        0 0 45px rgba(236, 72, 153, 0.45),
+        0 20px 55px rgba(0, 0, 0, 0.9),
+        inset 0 0 12px rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #060913;
+      border-radius: 17px;
+      overflow: hidden;
+      border: 3px solid #020617;
+    }
+
+    #partyCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    /* Intro Splash Fade In & Out Animation for Automaker Logo */
+    @keyframes automakerFadeInOut {
+      0% {
+        opacity: 0;
+        transform: scale(0.78);
+        filter: drop-shadow(0 0 0px rgba(239, 68, 68, 0));
+      }
+      30% {
+        opacity: 1;
+        transform: scale(1.03);
+        filter: drop-shadow(0 0 36px rgba(239, 68, 68, 0.9));
+      }
+      72% {
+        opacity: 1;
+        transform: scale(1);
+        filter: drop-shadow(0 0 28px rgba(245, 158, 11, 0.85));
+      }
+      100% {
+        opacity: 0;
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 0px rgba(239, 68, 68, 0));
+      }
+    }
+
+    @keyframes loadingBarProgress {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    .automaker-fade-cycle {
+      animation: automakerFadeInOut 3.4s ease-in-out forwards;
+    }
+
+    .loading-bar-fill {
+      animation: loadingBarProgress 3.1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    /* Custom Scrollbar for Garage Modal */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(236, 72, 153, 0.6);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="w-full max-w-[1140px] px-3 mb-1.5 flex items-center justify-between gap-2 z-20">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-fuchsia-500 via-red-500 to-amber-400 flex items-center justify-center shadow-lg shadow-fuchsia-500/30 text-lg border border-white/30">
+        🎧
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-arcade text-xs sm:text-base tracking-wider bg-gradient-to-r from-amber-300 via-fuchsia-400 to-cyan-300 bg-clip-text text-transparent leading-tight">
+            OUTDOOR DJ BUS PARTY
+          </h1>
+          <span class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-950/90 border border-red-500/50 text-[10px] font-bold text-amber-300 tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
+            Powered by Automaker
+          </span>
+        </div>
+        <p class="text-[10px] sm:text-xs text-slate-400 font-sinhala">
+          ශ්‍රී ලංකා බස් ඩීජේ පාටි • <span id="activeConfigSummary" class="text-cyan-300 font-semibold">අනුත්තරාවී (Anuththaravi) • Cyber RGB</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <!-- Upload MP3 Quick Trigger -->
+      <label
+        for="mp3UploadInput"
+        class="px-2.5 py-1.5 rounded-xl bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-400/50 text-[11px] font-bold text-cyan-200 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+        title="Upload your own MP3 song"
+      >
+        <span>🎵</span>
+        <span class="hidden md:inline" id="QuickTrackLabel">UPLOAD MP3</span>
+      </label>
+      <input id="mp3UploadInput" type="file" accept="audio/*" class="hidden" />
+
+      <button
+        id="openGarageBtn"
+        type="button"
+        class="px-3 py-1.5 rounded-xl bg-fuchsia-950/90 hover:bg-fuchsia-900 border border-fuchsia-400/60 text-[11px] font-bold text-fuchsia-200 transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+      >
+        <span>🛠️</span>
+        <span>GARAGE / DJ SETUP</span>
+      </button>
+
+      <button
+        id="muteToggleBtn"
+        type="button"
+        class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs text-slate-200 transition cursor-pointer"
+        title="Mute / Unmute Audio"
+      >
+        🔊
+      </button>
+    </div>
+  </header>
+
+  <main class="stage-wrapper">
+    <div class="canvas-container">
+      <canvas id="partyCanvas" width="1120" height="630"></canvas>
+
+      <!-- Persistent "Powered by Automaker" Corner Badge -->
+      <div class="absolute bottom-2 right-2.5 z-20 pointer-events-none flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/75 border border-red-500/40 backdrop-blur-sm">
+        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+        <span class="text-[9px] uppercase tracking-wider text-slate-300 font-semibold">
+          Powered by <strong class="text-red-400 font-extrabold italic">Automaker</strong>
+        </span>
+      </div>
+
+      <!-- 1. INTRO LOADING SCREEN WITH AUTOMAKER LOGO FADING IN & OUT -->
+      <div
+        id="introSplashOverlay"
+        class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center transition-opacity duration-700 cursor-pointer"
+        title="Click or Tap to Skip Intro"
+      >
+        <div class="relative flex flex-col items-center justify-center automaker-fade-cycle">
+          <div class="absolute w-64 h-64 rounded-full bg-gradient-to-tr from-red-600/40 via-amber-500/25 to-transparent blur-3xl pointer-events-none"></div>
+
+          <div class="w-44 h-44 sm:w-56 sm:h-56 rounded-full relative flex items-center justify-center mb-3">
+            <img
+              id="introLogoImg"
+              src="20240914_220739.jpg"
+              alt="Automaker Logo"
+              class="w-full h-full object-contain rounded-full"
+              onerror="this.style.display='none'; document.getElementById('introLogoFallbackSvg').classList.remove('hidden');"
+            />
+            <!-- Built-in Vector Replica of 20240914_220739.jpg (Red Lion + Sports Car Emblem) -->
+            <svg
+              id="introLogoFallbackSvg"
+              viewBox="0 0 300 300"
+              class="w-full h-full hidden"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="amRing" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ff0000" />
+                  <stop offset="55%" stop-color="#f59e0b" />
+                  <stop offset="100%" stop-color="#7f1d1d" />
+                </linearGradient>
+                <linearGradient id="amMane" x1="50%" y1="0%" x2="50%" y2="100%">
+                  <stop offset="0%" stop-color="#ff1a1a" />
+                  <stop offset="70%" stop-color="#dc2626" />
+                  <stop offset="100%" stop-color="#7f1d1d" />
+                </linearGradient>
+                <linearGradient id="amHood" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#ff2a2a" />
+                  <stop offset="100%" stop-color="#990000" />
+                </linearGradient>
+              </defs>
+              <circle cx="150" cy="150" r="144" fill="#000000" stroke="url(#amRing)" stroke-width="6" />
+              <path d="M150 26 L164 46 L186 34 L189 55 L220 48 L210 72 L240 78 L225 98 L250 112 L226 132 L242 156 L58 156 L74 132 L50 112 L75 98 L60 78 L90 72 L80 48 L111 55 L114 34 L136 46 Z" fill="url(#amMane)" />
+              <polygon points="85,54 115,62 96,86" fill="#ef4444" />
+              <polygon points="215,54 185,62 204,86" fill="#ef4444" />
+              <path d="M112 72 Q150 62 188 72 L180 105 L120 105 Z" fill="#e11d48" />
+              <polygon points="118,86 138,91 124,96" fill="#ffffff" />
+              <polygon points="182,86 162,91 176,96" fill="#ffffff" />
+              <path d="M90 215 L100 245 L112 222 L128 265 L140 232 L150 278 L162 232 L175 262 L188 222 L200 245 L210 215 Z" fill="url(#amMane)" />
+              <path d="M98 100 Q150 93 202 100 L218 134 L82 134 Z" fill="#090d16" stroke="#dc2626" stroke-width="3" />
+              <path d="M64 134 Q55 152 56 184 L244 184 Q245 152 236 134 Z" fill="url(#amHood)" />
+              <polygon points="64,145 96,158 90,168 60,158" fill="#1e293b" stroke="#ffffff" stroke-width="2" />
+              <polygon points="236,145 204,158 210,168 240,158" fill="#1e293b" stroke="#ffffff" stroke-width="2" />
+              <path d="M98 164 Q150 156 202 164 L208 186 L92 186 Z" fill="#000000" />
+              <text x="150" y="212" text-anchor="middle" fill="#ffffff" font-family="Inter, sans-serif" font-weight="900" font-style="italic" font-size="40" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.95));">Automaker</text>
+            </svg>
+          </div>
+
+          <p class="text-[11px] uppercase tracking-[0.35em] text-amber-400 font-bold">
+            AUTOMAKER PRESENTS
+          </p>
+          <h2 class="font-arcade text-xl sm:text-3xl text-white tracking-wider mt-1 drop-shadow-[0_2px_12px_rgba(239,68,68,0.85)]">
+            OUTDOOR DJ BUS PARTY
+          </h2>
+          <p class="text-xs text-slate-400 font-sinhala mt-1">
+            ශ්‍රී ලංකා ලේලන්ඩ් බස් ඩීජේ සංදර්ශනය • Initializing Sound System...
+          </p>
+        </div>
+
+        <div class="w-56 sm:w-64 h-2 bg-slate-900 rounded-full overflow-hidden border border-red-500/40 p-0.5 mt-5">
+          <div class="h-full bg-gradient-to-r from-red-600 via-amber-400 to-fuchsia-500 rounded-full loading-bar-fill"></div>
+        </div>
+        <span class="text-[10px] text-slate-500 mt-2.5 uppercase tracking-widest">
+          Tap anywhere to enter Garage
+        </span>
+      </div>
+
+      <div
+        id="garageModalOverlay"
+        class="absolute inset-0 z-40 bg-slate-950/92 backdrop-blur-md flex flex-col justify-between p-3 sm:p-5 overflow-y-auto transition-opacity duration-300 opacity-0 pointer-events-none"
+      >
+        <!-- Top Header -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+          <div class="text-center sm:text-left">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-fuchsia-500/20 border border-fuchsia-400/40 text-fuchsia-300 text-[10px] font-bold uppercase tracking-widest">
+              <span>🔊</span>
+              <span>AUTOMAKER CUSTOM GARAGE &amp; DJ STAGE</span>
+            </div>
+            <h2 class="font-arcade text-lg sm:text-2xl text-amber-300 tracking-wide mt-0.5">
+              CUSTOMIZE YOUR DJ BUS &amp; SOUND SYSTEM
+            </h2>
+          </div>
+
+          <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl">
+            <div class="text-right">
+              <span class="block text-[9px] uppercase text-slate-400">Party Bank</span>
+              <span id="garageCashDisplay" class="font-arcade text-sm sm:text-base text-emerald-400">Rs. 1,500</span>
+            </div>
+            <div class="h-6 w-px bg-slate-700"></div>
+            <div class="text-right">
+              <span class="block text-[9px] uppercase text-slate-400">High Score</span>
+              <span id="garageHighScoreDisplay" class="font-arcade text-sm sm:text-base text-amber-300">8520</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Customization Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 my-2.5 items-stretch">
+          <!-- Left Column: Bus Skin Selection (5 cols) -->
+          <div class="lg:col-span-5 bg-slate-900/85 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-fuchsia-300 flex items-center gap-1.5">
+                  <span>🚌</span>
+                  <span>1. Select Bus Skin &amp; Livery</span>
+                </h3>
+                <span class="text-[10px] text-slate-400 font-sinhala">බස් ස්ටිකර් තෝරන්න</span>
+              </div>
+
+              <!-- 3 Required Bus Skins + Bonus Gold Skin -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="skinSelectorGrid">
+                <!-- Skin 1: 645279765_1379534504187227_3668839299575711260_n.jpg -->
+                <button
+                  type="button"
+                  data-skin="royal_red"
+                  class="skin-card group p-2 rounded-xl border-2 border-amber-400 bg-amber-950/35 text-left transition flex flex-col gap-1 cursor-pointer"
+                >
+                  <div class="w-full h-14 rounded-lg overflow-hidden bg-slate-950 relative border border-amber-500/40 flex items-center justify-center">
+                    <img
+                      src="645279765_1379534504187227_3668839299575711260_n.jpg"
+                      alt="Royal Edition Red Bus"
+                      class="w-full h-full object-cover"
+                      onerror="this.style.display='none'"
+                    />
+                    <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-bold text-amber-300">
+                      Royal Edition
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-amber-300">🔥 Royal Edition DJ</span>
+                    <span class="skin-dot text-xs text-amber-400">●</span>
+                  </div>
+                  <span class="text-[9px] text-slate-300 leading-tight">Red/Gold Flame Livery + Open Bay Subwoofers</span>
+                </button>
+
+                <!-- Skin 2: 474815303_1151185206416409_6528253197314993942_n.jpg -->
+                <button
+                  type="button"
+                  data-skin="midnight_led"
+                  class="skin-card group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 text-left transition flex flex-col gap-1 cursor-pointer"
+                >
+                  <div class="w-full h-14 rounded-lg overflow-hidden bg-slate-950 relative border border-cyan-500/40 flex items-center justify-center">
+                    <img
+                      src="474815303_1151185206416409_6528253197314993942_n.jpg"
+                      alt="Midnight LED Bus"
+                      class="w-full h-full object-cover"
+                      onerror="this.style.display='none'"
+                    />
+                    <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-bold text-cyan-300">
+                      Night LEDs
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-cyan-300">🌃 Midnight Pixel LED</span>
+                    <span class="skin-dot text-xs text-slate-500">○</span>
+                  </div>
+                  <span class="text-[9px] text-slate-300 leading-tight">Dark Night Bus + Lotus Grille &amp; Full RGB Strips</span>
+                </button>
+
+                <!-- Skin 3: 20260102_005718.jpg (අනුත්තරාවී Pink Wrap) -->
+                <button
+                  type="button"
+                  data-skin="anuththaravi_pink"
+                  class="skin-card group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 text-left transition flex flex-col gap-1 cursor-pointer"
+                >
+                  <div class="w-full h-14 rounded-lg overflow-hidden bg-slate-950 relative border border-pink-500/40 flex items-center justify-center">
+                    <img
+                      src="20260102_005718.jpg"
+                      alt="Anuththaravi Pink Wrap"
+                      class="w-full h-full object-cover"
+                      onerror="this.style.display='none'"
+                    />
+                    <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-bold text-pink-300 font-sinhala">
+                      අනුත්තරාවී
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-pink-300 font-sinhala">👑 අනුත්තරාවී Turbo</span>
+                    <span class="skin-dot text-xs text-slate-500">○</span>
+                  </div>
+                  <span class="text-[9px] text-slate-300 leading-tight">Magenta Automaker Wrap + Native Art</span>
+                </button>
+
+                <!-- Skin 4: 20241210_123527.jpg (අප්සරාවී Gold Wrap) -->
+                <button
+                  type="button"
+                  data-skin="apsaravi_gold"
+                  class="skin-card group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 text-left transition flex flex-col gap-1 cursor-pointer"
+                >
+                  <div class="w-full h-14 rounded-lg overflow-hidden bg-slate-950 relative border border-yellow-500/40 flex items-center justify-center">
+                    <img
+                      src="20241210_123527.jpg"
+                      alt="Apsaravi Gold Wrap"
+                      class="w-full h-full object-cover"
+                      onerror="this.style.display='none'"
+                    />
+                    <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 text-[9px] font-bold text-yellow-300 font-sinhala">
+                      අප්සරාවී
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-yellow-300 font-sinhala">✨ අප්සරාවී Gold</span>
+                    <span class="skin-dot text-xs text-slate-500">○</span>
+                  </div>
+                  <span class="text-[9px] text-slate-300 leading-tight">Golden Temple &amp; Eagle Turbo Intercooler</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center Column: Neon Lights & Speaker Setup (4 cols) -->
+          <div class="lg:col-span-4 bg-slate-900/85 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between gap-2.5">
+            <!-- Neon Light Rig Selector -->
+            <div>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5 mb-1.5">
+                <span>🌈</span>
+                <span>2. Stage &amp; Bus Neon Light Setup</span>
+              </h3>
+              <div class="grid grid-cols-2 gap-1.5" id="neonSelectorGrid">
+                <button
+                  type="button"
+                  data-neon="cyber_rgb"
+                  class="neon-btn p-2 rounded-xl border-2 border-cyan-400 bg-cyan-950/40 text-left text-[11px] font-bold text-cyan-200 cursor-pointer"
+                >
+                  🌈 Cyber RGB Lasers
+                  <span class="block text-[9px] font-normal text-slate-300">6-Beam Rainbow Sweep</span>
+                </button>
+                <button
+                  type="button"
+                  data-neon="perahera_gold"
+                  class="neon-btn p-2 rounded-xl border-2 border-slate-700 bg-slate-950 text-left text-[11px] font-bold text-amber-300 cursor-pointer"
+                >
+                  🔥 Perahera Gold/Red
+                  <span class="block text-[9px] font-normal text-slate-400">Warm Festival Strobe</span>
+                </button>
+                <button
+                  type="button"
+                  data-neon="colombo_uv"
+                  class="neon-btn p-2 rounded-xl border-2 border-slate-700 bg-slate-950 text-left text-[11px] font-bold text-fuchsia-300 cursor-pointer"
+                >
+                  💜 Colombo UV Club
+                  <span class="block text-[9px] font-normal text-slate-400">Magenta &amp; Electric Blue</span>
+                </button>
+                <button
+                  type="button"
+                  data-neon="rasta_bass"
+                  class="neon-btn p-2 rounded-xl border-2 border-slate-700 bg-slate-950 text-left text-[11px] font-bold text-emerald-300 cursor-pointer"
+                >
+                  🟢 Baila Rasta Pulse
+                  <span class="block text-[9px] font-normal text-slate-400">Green, Gold &amp; Red</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Outdoor Speaker Configuration -->
+            <div>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5 mb-1.5">
+                <span>🔊</span>
+                <span>3. Outdoor Speaker Configuration</span>
+              </h3>
+              <div class="grid grid-cols-1 gap-1.5" id="speakerSelectorGrid">
+                <button
+                  type="button"
+                  data-speaker="mega_full"
+                  class="speaker-btn px-2.5 py-1.5 rounded-xl border-2 border-amber-400 bg-amber-950/40 text-left flex items-center justify-between cursor-pointer"
+                >
+                  <div>
+                    <span class="text-[11px] font-extrabold text-amber-200 block">🔊 Full Royal Sound Wall (Max Vibe +25%)</span>
+                    <span class="text-[9px] text-slate-300">6x18" Luggage Bay Subs + Roof Horn Tweeters + Stage Stacks</span>
+                  </div>
+                  <span class="text-xs font-bold text-amber-300">ACTIVE</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-speaker="luggage_subs"
+                  class="speaker-btn px-2.5 py-1.5 rounded-xl border-2 border-slate-700 bg-slate-950 text-left flex items-center justify-between cursor-pointer"
+                >
+                  <div>
+                    <span class="text-[11px] font-extrabold text-slate-200 block">🔈 Luggage Compartment Bass Bins</span>
+                    <span class="text-[9px] text-slate-400">Side Belly Subwoofers + Dual Stage Monitors</span>
+                  </div>
+                  <span class="text-xs font-bold text-slate-500">SELECT</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-speaker="horn_array"
+                  class="speaker-btn px-2.5 py-1.5 rounded-xl border-2 border-slate-700 bg-slate-950 text-left flex items-center justify-between cursor-pointer"
+                >
+                  <div>
+                    <span class="text-[11px] font-extrabold text-slate-200 block">🎺 High-Throw Window Horn Array</span>
+                    <span class="text-[9px] text-slate-400">Long-Range Mid/High Horns + Extra Roof Tweeters</span>
+                  </div>
+                  <span class="text-xs font-bold text-slate-500">SELECT</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Music Track & Local MP3 Upload (3 cols) -->
+          <div class="lg:col-span-3 bg-slate-900/85 border border-slate-800 rounded-2xl p-3 flex flex-col justify-between gap-2">
+            <div>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5 mb-1.5">
+                <span>🎵</span>
+                <span>4. DJ Track &amp; MP3 Deck</span>
+              </h3>
+
+              <div class="flex flex-col gap-1.5" id="trackSelectorList">
+                <button
+                  type="button"
+                  data-track="papare_edm"
+                  class="track-btn p-2 rounded-xl border-2 border-emerald-400 bg-emerald-950/40 text-left cursor-pointer"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-emerald-300">🎺 Papare Bass Drop</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 font-bold">128 BPM</span>
+                  </div>
+                  <span class="text-[9px] text-slate-300 block">Heavy Lankan Brass + Sub Bass</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-track="baila_party"
+                  class="track-btn p-2 rounded-xl border-2 border-slate-700 bg-slate-950 text-left cursor-pointer"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-slate-200">💃 Nonstop Baila Mix</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">138 BPM</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 block">6/8 Fast Dancefloor Rhythm</span>
+                </button>
+
+                <button
+                  type="button"
+                  data-track="colombo_trance"
+                  class="track-btn p-2 rounded-xl border-2 border-slate-700 bg-slate-950 text-left cursor-pointer"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold text-slate-200">⚡ Night Rider Bus EDM</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold">132 BPM</span>
+                  </div>
+                  <span class="text-[9px] text-slate-400 block">Big Room Synth + Turbo Siren</span>
+                </button>
+              </div>
+
+              <!-- Custom MP3 Upload Box -->
+              <div class="mt-2 p-2.5 rounded-xl bg-slate-950 border border-dashed border-cyan-400/60 text-center">
+                <p class="text-[10px] font-bold text-cyan-300 mb-1">
+                  📂 Upload Your Own Local MP3
+                </p>
+                <label
+                  for="mp3UploadInput"
+                  class="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-2.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-[10px] font-extrabold text-cyan-200 cursor-pointer transition"
+                >
+                  <span>🎶</span>
+                  <span id="uploadedFileName">Choose Audio File (.mp3/.wav)</span>
+                </label>
+                <p class="text-[9px] text-slate-400 mt-1 leading-tight">
+                  Real-time Web Audio FFT analyzer syncs beat targets to your MP3!
+                </p>
+              </div>
+            </div>
+
+            <!-- How to Play Summary -->
+            <div class="p-2 rounded-xl bg-slate-950/90 border border-slate-800 text-[10px] text-slate-300 space-y-0.5">
+              <div class="font-bold text-amber-300">🎮 Party Rules:</div>
+              <div>• Hit Beat Targets (<strong class="text-white">SPACE / A,S,D,F / Tap Deck</strong>) to fill <strong class="text-emerald-300">VIBE METER</strong>.</div>
+              <div>• High Vibe summons <strong class="text-pink-300">Drunk Uncles, Rappers &amp; Dancers</strong>!</div>
+              <div>• <strong class="text-emerald-400">Tap flying Rs. Cash Bills</strong> thrown by the crowd!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2 border-t border-slate-800">
+          <div class="flex items-center gap-2 text-[11px] text-slate-400">
+            <span>🎧 Web Audio FFT Equalizer Ready</span>
+            <span>•</span>
+            <span class="text-amber-300 font-sinhala">"යමු යමු! බස් පාටිය පටන් ගමු!"</span>
+          </div>
+
+          <button
+            id="startPartyBtn"
+            type="button"
+            class="w-full sm:w-auto px-8 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-fuchsia-500 hover:from-amber-300 hover:to-fuchsia-400 text-slate-950 font-arcade text-sm sm:text-base tracking-wider shadow-xl shadow-fuchsia-500/30 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>🔥</span>
+            <span>DROP THE BEAT &amp; START PARTY!</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full max-w-[1140px] px-3 mt-1.5 flex flex-wrap items-center justify-between gap-1.5 z-20">
+    <!-- Left: 4 Rhythm Beat Pad Buttons (A, S, D, F) -->
+    <div class="flex items-center gap-1.5 flex-1 min-w-[280px]">
+      <button
+        id="padBtn0"
+        type="button"
+        class="flex-1 py-2 px-2 rounded-xl bg-pink-950/90 hover:bg-pink-900 active:scale-95 border-2 border-pink-400 text-pink-200 font-arcade text-[11px] sm:text-xs shadow-md flex items-center justify-center gap-1 cursor-pointer"
+      >
+        <span>🥁</span>
+        <span>KICK [A]</span>
+      </button>
+      <button
+        id="padBtn1"
+        type="button"
+        class="flex-1 py-2 px-2 rounded-xl bg-amber-950/90 hover:bg-amber-900 active:scale-95 border-2 border-amber-400 text-amber-200 font-arcade text-[11px] sm:text-xs shadow-md flex items-center justify-center gap-1 cursor-pointer"
+      >
+        <span>🎺</span>
+        <span>SNARE [S]</span>
+      </button>
+      <button
+        id="padBtn2"
+        type="button"
+        class="flex-1 py-2 px-2 rounded-xl bg-cyan-950/90 hover:bg-cyan-900 active:scale-95 border-2 border-cyan-400 text-cyan-200 font-arcade text-[11px] sm:text-xs shadow-md flex items-center justify-center gap-1 cursor-pointer"
+      >
+        <span>🎹</span>
+        <span>SYNTH [D]</span>
+      </button>
+      <button
+        id="padBtn3"
+        type="button"
+        class="flex-1 py-2 px-2 rounded-xl bg-emerald-950/90 hover:bg-emerald-900 active:scale-95 border-2 border-emerald-400 text-emerald-200 font-arcade text-[11px] sm:text-xs shadow-md flex items-center justify-center gap-1 cursor-pointer"
+      >
+        <span>🔊</span>
+        <span>DROP [F]</span>
+      </button>
+    </div>
+
+    <!-- Center: Big Master Beat Hit Button (SPACE) -->
+    <button
+      id="masterBeatBtn"
+      type="button"
+      class="px-5 py-2 rounded-xl bg-gradient-to-r from-fuchsia-500 via-amber-400 to-cyan-400 text-slate-950 font-arcade text-xs sm:text-sm border-2 border-white shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer"
+    >
+      <span>⚡</span>
+      <span>HIT BEAT [SPACE]</span>
+    </button>
+
+    <!-- Right: Party Crowd Boosters (Spend Collected Cash or Trigger Horn) -->
+    <div class="flex items-center gap-1.5">
+      <button
+        id="busHornBtn"
+        type="button"
+        class="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-arcade text-[11px] border-2 border-slate-950 shadow-md active:scale-95 cursor-pointer flex items-center gap-1"
+        title="Blast Sri Lankan Bus Air Horn"
+      >
+        <span>📯</span>
+        <span class="hidden sm:inline">HORN</span>
+      </button>
+
+      <button
+        id="collectAllCashBtn"
+        type="button"
+        class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-arcade text-[11px] border-2 border-white shadow-md active:scale-95 cursor-pointer flex items-center gap-1"
+        title="Sweep & Collect All Flying Money on Stage"
+      >
+        <span>💵</span>
+        <span>SWEEP CASH</span>
+      </button>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const canvas = document.getElementById('partyCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const introSplashOverlay = document.getElementById('introSplashOverlay');
+      const garageModalOverlay = document.getElementById('garageModalOverlay');
+      const openGarageBtn = document.getElementById('openGarageBtn');
+      const startPartyBtn = document.getElementById('startPartyBtn');
+      const muteToggleBtn = document.getElementById('muteToggleBtn');
+      const activeConfigSummary = document.getElementById('activeConfigSummary');
+      const garageCashDisplay = document.getElementById('garageCashDisplay');
+      const garageHighScoreDisplay = document.getElementById('garageHighScoreDisplay');
+      const mp3UploadInput = document.getElementById('mp3UploadInput');
+      const uploadedFileName = document.getElementById('uploadedFileName');
+      const QuickTrackLabel = document.getElementById('QuickTrackLabel');
+
+      // preload all uploaded user assets so they can be mapped directly onto the 3D/2D bus panels & DJ booth
+      const imageAssets = {
+        logo: new Image(),
+        royal_red: new Image(),
+        midnight_led: new Image(),
+        anuththaravi_pink: new Image(),
+        apsaravi_gold: new Image()
+      };
+
+      const assetLoaded = {
+        logo: false,
+        royal_red: false,
+        midnight_led: false,
+        anuththaravi_pink: false,
+        apsaravi_gold: false
+      };
+
+      function loadAsset(key, filename) {
+        imageAssets[key].onload = () => {
+          assetLoaded[key] = true;
+        };
+        imageAssets[key].src = filename;
+      }
+
+      loadAsset('logo', '20240914_220739.jpg');
+      loadAsset('royal_red', '645279765_1379534504187227_3668839299575711260_n.jpg');
+      loadAsset('midnight_led', '474815303_1151185206416409_6528253197314993942_n.jpg');
+      loadAsset('anuththaravi_pink', '20260102_005718.jpg');
+      loadAsset('apsaravi_gold', '20241210_123527.jpg');
+
+      let audioCtx = null;
+      let analyserNode = null;
+      let freqDataArray = new Uint8Array(64);
+      let timeDataArray = new Uint8Array(64);
+      let isMuted = false;
+
+      // Custom MP3 HTML5 Audio element + MediaElementAudioSourceNode
+      let customAudioEl = null;
+      let customAudioSource = null;
+      let usingCustomMp3 = false;
+      let lastFluxBeatTime = 0;
+
+      function ensureAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+            analyserNode = audioCtx.createAnalyser();
+            analyserNode.fftSize = 128;
+            analyserNode.smoothingTimeConstant = 0.78;
+            freqDataArray = new Uint8Array(analyserNode.frequencyBinCount);
+            timeDataArray = new Uint8Array(analyserNode.frequencyBinCount);
+            analyserNode.connect(audioCtx.destination);
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+
+      // Play a synthesized instrument routed through the Web Audio AnalyserNode!
+      function playSynthSound(freq, type, duration, vol = 0.2, endFreq = null, delay = 0) {
+        if (isMuted || !audioCtx || !analyserNode) return;
+        try {
+          const now = audioCtx.currentTime + delay;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, now);
+          if (endFreq !== null) {
+            osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+          }
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(vol, now + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+          osc.connect(gain);
+          gain.connect(analyserNode);
+          osc.start(now);
+          osc.stop(now + duration + 0.02);
+        } catch (_) {}
+      }
+
+      // Synthesized Punchy 808 / Subwoofer Kick + Snare + Papare Brass for built-in DJ tracks
+      function triggerKickDrum(vol = 0.42) {
+        playSynthSound(135, 'sine', 0.24, vol, 36);
+        playSynthSound(85, 'triangle', 0.18, vol * 0.65, 28);
+      }
+
+      function triggerSnareHit(vol = 0.22) {
+        if (isMuted || !audioCtx || !analyserNode) return;
+        try {
+          const now = audioCtx.currentTime;
+          const len = Math.floor(audioCtx.sampleRate * 0.14);
+          const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.35));
+          }
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = buf;
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'highpass';
+          filter.frequency.setValueAtTime(420, now);
+          const gain = audioCtx.createGain();
+          gain.gain.setValueAtTime(vol, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.13);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(analyserNode);
+          noise.start(now);
+        } catch (_) {}
+        playSynthSound(220, 'triangle', 0.09, vol * 0.6, 110);
+      }
+
+      // Sri Lankan Bus Multi-Tone Air Horn ("PEEP PEEP!")
+      function playLankanBusHorn() {
+        ensureAudioContext();
+        const hornNotes = [
+          { f: 587.33, d: 0.09, t: 0.0 },
+          { f: 739.99, d: 0.09, t: 0.1 },
+          { f: 880.0, d: 0.1, t: 0.2 },
+          { f: 739.99, d: 0.09, t: 0.31 },
+          { f: 987.77, d: 0.24, t: 0.41 }
+        ];
+        hornNotes.forEach(n => {
+          playSynthSound(n.f, 'sawtooth', n.d, 0.18, null, n.t);
+          playSynthSound(n.f * 0.5, 'square', n.d, 0.09, null, n.t);
+        });
+      }
+
+      function playCashCollectSound() {
+        ensureAudioContext();
+        playSynthSound(1046.5, 'sine', 0.08, 0.2);
+        playSynthSound(1318.5, 'triangle', 0.15, 0.22, null, 0.06);
+      }
+
+      const SKIN_LABELS = {
+        royal_red: 'Royal Edition Red DJ',
+        midnight_led: 'Midnight Pixel LED',
+        anuththaravi_pink: 'අනුත්තරාවී (Anuththaravi)',
+        apsaravi_gold: 'අප්සරාවී (Apsaravi Gold)'
+      };
+
+      const NEON_PALETTES = {
+        cyber_rgb: ['#22c55e', '#ec4899', '#06b6d4', '#facc15', '#a855f7', '#ef4444'],
+        perahera_gold: ['#facc15', '#ef4444', '#f97316', '#fde047', '#dc2626', '#fb923c'],
+        colombo_uv: ['#d946ef', '#38bdf8', '#8b5cf6', '#ec4899', '#06b6d4', '#f43f5e'],
+        rasta_bass: ['#22c55e', '#facc15', '#ef4444', '#4ade80', '#eab308', '#dc2626']
+      };
+
+      const TRACK_CONFIGS = {
+        papare_edm: {
+          name: 'Papare Bass Drop',
+          bpm: 128,
+          melody: [293.66, 329.63, 349.23, 392.0, 440.0, 392.0, 349.23, 329.63]
+        },
+        baila_party: {
+          name: 'Nonstop Baila Mix',
+          bpm: 138,
+          melody: [329.63, 392.0, 440.0, 493.88, 523.25, 493.88, 440.0, 392.0]
+        },
+        colombo_trance: {
+          name: 'Night Rider Bus EDM',
+          bpm: 132,
+          melody: [261.63, 311.13, 392.0, 523.25, 466.16, 392.0, 311.13, 261.63]
+        }
+      };
+
+      const state = {
+        inIntro: true,
+        inGarage: false,
+        running: true,
+        tick: 0,
+
+        // Customization selections
+        skin: 'royal_red',
+        neonMode: 'cyber_rgb',
+        speakerConfig: 'mega_full',
+        selectedTrack: 'papare_edm',
+
+        // Party Metrics (starts with lively party energy matching reference screenshot)
+        vibe: 76, // 0 to 100
+        score: 8520,
+        highScore: 8520,
+        cash: 1500,
+        combo: 0,
+        maxCombo: 0,
+        peopleCount: 150,
+
+        // Audio & Beat Engine
+        bassEnergy: 0,
+        midEnergy: 0,
+        highEnergy: 0,
+        beatStep: 0,
+        nextStepTime: 0,
+        crossfaderPos: 0.5, // 0..1 animated beat-matching slider
+
+        // Active Rhythm Notes traveling along the 4-lane DJ Equalizer Deck
+        notes: [],
+        laneFlashes: [0, 0, 0, 0],
+
+        // Crowd Dancers in front of the Bus & DJ Stage
+        dancers: [],
+
+        // Flying Money Bills thrown by the crowd during intense vibe moments
+        moneyBills: [],
+
+        // Visual FX & Speech Bubbles
+        particles: [],
+        popups: [],
+        djBubbleText: 'PARTY TIME!',
+        djBubbleTimer: 180,
+        uncleBubbleText: 'YAMU YAMU!',
+        uncleBubbleTimer: 180,
+        busHornTimer: 0,
+        screenShake: 0
+      };
+
+      function initCrowdDancers() {
+        state.dancers = [
+          // Left near front of bus (Yellow vest youth with hands up)
+          {
+            id: 0,
+            role: 'youth_boy',
+            x: 72,
+            y: 486,
+            scale: 1.0,
+            shirt: '#facc15',
+            pants: '#64748b',
+            skin: '#c68642',
+            minVibe: 10,
+            phase: 0.2
+          },
+          // Girl in purple top & pink skirt
+          {
+            id: 1,
+            role: 'youth_girl',
+            x: 175,
+            y: 515,
+            scale: 0.96,
+            shirt: '#7e22ce',
+            pants: '#ec4899',
+            skin: '#b97a57',
+            minVibe: 15,
+            phase: 1.1
+          },
+          // Guy in orange tee & olive pants
+          {
+            id: 2,
+            role: 'youth_boy',
+            x: 274,
+            y: 518,
+            scale: 0.96,
+            shirt: '#f59e0b',
+            pants: '#65a30d',
+            skin: '#c68642',
+            minVibe: 22,
+            phase: 2.0
+          },
+          // Girl in purple tank & denim shorts
+          {
+            id: 3,
+            role: 'youth_girl',
+            x: 368,
+            y: 495,
+            scale: 0.95,
+            shirt: '#a855f7',
+            pants: '#38bdf8',
+            skin: '#d2996c',
+            minVibe: 28,
+            phase: 2.9
+          },
+          // Center Girl in pink crop top & blue shorts with arms raised
+          {
+            id: 4,
+            role: 'youth_girl',
+            x: 478,
+            y: 485,
+            scale: 1.02,
+            shirt: '#ec4899',
+            pants: '#0284c7',
+            skin: '#d99b72',
+            minVibe: 10,
+            phase: 0.5
+          },
+          // Jumping Rapper / Youth in bright green shirt & blue jeans
+          {
+            id: 5,
+            role: 'rapper',
+            x: 595,
+            y: 465,
+            scale: 1.0,
+            shirt: '#4ade80',
+            pants: '#2563eb',
+            skin: '#c68642',
+            minVibe: 35,
+            phase: 1.7
+          },
+          // Jumping Girl in yellow top & jeans
+          {
+            id: 6,
+            role: 'youth_girl',
+            x: 682,
+            y: 446,
+            scale: 0.94,
+            shirt: '#facc15',
+            pants: '#3b82f6',
+            skin: '#d99b72',
+            minVibe: 45,
+            phase: 2.4
+          },
+          // Jumping Guy in blue tank top
+          {
+            id: 7,
+            role: 'rapper',
+            x: 758,
+            y: 445,
+            scale: 0.96,
+            shirt: '#3b82f6',
+            pants: '#1d4ed8',
+            skin: '#b97a57',
+            minVibe: 55,
+            phase: 3.2
+          },
+          // Happy Bald Uncle in cyan t-shirt & shorts holding cash
+          {
+            id: 8,
+            role: 'uncle_shirt',
+            x: 846,
+            y: 472,
+            scale: 0.98,
+            shirt: '#06b6d4',
+            pants: '#57534e',
+            skin: '#c68642',
+            minVibe: 30,
+            phase: 0.8
+          },
+          // Bare-chested Drunk Uncle in Blue Checkered Sarong & White Beard (Right Foreground!)
+          {
+            id: 9,
+            role: 'uncle_sarong_bare',
+            x: 942,
+            y: 498,
+            scale: 1.08,
+            shirt: 'none',
+            pants: '#3b82f6',
+            skin: '#d29062',
+            minVibe: 10,
+            phase: 1.5
+          },
+          // White Baniyan (Vest) Uncle in Yellow/Orange Plaid Sarong shouting "YAMU YAMU!"
+          {
+            id: 10,
+            role: 'uncle_sarong_vest',
+            x: 1038,
+            y: 498,
+            scale: 1.08,
+            shirt: '#f8fafc',
+            pants: '#eab308',
+            skin: '#c68642',
+            minVibe: 10,
+            phase: 2.2
+          }
+        ];
+      }
+
+      initCrowdDancers();
+
+      function spawnFlyingMoneyBill(fromX, fromY) {
+        if (state.moneyBills.length > 22) return;
+        const denominations = [100, 500, 1000];
+        const value = denominations[Math.floor(Math.random() * denominations.length)];
+        state.moneyBills.push({
+          x: fromX !== undefined ? fromX : 220 + Math.random() * 760,
+          y: fromY !== undefined ? fromY : 440 + Math.random() * 60,
+          vx: (Math.random() - 0.5) * 2.2,
+          vy: -2.2 - Math.random() * 2.0,
+          gravity: 0.028,
+          angle: (Math.random() - 0.5) * 0.9,
+          spin: (Math.random() - 0.5) * 0.04,
+          value,
+          life: 360
+        });
+      }
+
+      // Seed initial flying cash bills like the reference image
+      function seedInitialMoneyBills() {
+        state.moneyBills = [];
+        const spots = [
+          { x: 268, y: 408 },
+          { x: 222, y: 468 },
+          { x: 312, y: 496 },
+          { x: 412, y: 472 },
+          { x: 545, y: 455 },
+          { x: 646, y: 398 },
+          { x: 728, y: 356 },
+          { x: 816, y: 458 },
+          { x: 892, y: 408 },
+          { x: 992, y: 446 },
+          { x: 805, y: 542 }
+        ];
+        spots.forEach(s => {
+          state.moneyBills.push({
+            x: s.x,
+            y: s.y,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: -0.35 + Math.random() * 0.7,
+            gravity: 0.004,
+            angle: (Math.random() - 0.5) * 0.8,
+            spin: (Math.random() - 0.5) * 0.02,
+            value: 500,
+            life: 520
+          });
+        });
+      }
+
+      seedInitialMoneyBills();
+
+      function addPopup(text, x, y, color = '#facc15', size = 18) {
+        state.popups.push({
+          text,
+          x,
+          y,
+          vy: -1.5,
+          life: 48,
+          color,
+          size
+        });
+      }
+
+      function spawnBeatNote(lane = null) {
+        const chosenLane = lane !== null ? lane : Math.floor(Math.random() * 4);
+        const colors = ['#ec4899', '#facc15', '#22d3ee', '#4ade80'];
+        state.notes.push({
+          lane: chosenLane,
+          x: 1060, // Spawns on right side of the DJ Beat Bar and travels left to the Hit Target at x=310
+          targetX: 310,
+          speed: 5.2,
+          color: colors[chosenLane],
+          hit: false,
+          missed: false
+        });
+      }
+
+      function updateAudioAndBeats() {
+        const now = performance.now();
+
+        if (usingCustomMp3 && analyserNode && customAudioEl && !customAudioEl.paused) {
+          analyserNode.getByteFrequencyData(freqDataArray);
+          analyserNode.getByteTimeDomainData(timeDataArray);
+
+          let bassSum = 0;
+          let midSum = 0;
+          let highSum = 0;
+          for (let i = 0; i < 8; i++) bassSum += freqDataArray[i];
+          for (let i = 8; i < 24; i++) midSum += freqDataArray[i];
+          for (let i = 24; i < 48; i++) highSum += freqDataArray[i];
+
+          const newBass = bassSum / (8 * 255);
+          // Detect bass transient in uploaded MP3 to spawn rhythm beat targets automatically
+          if (newBass > 0.52 && newBass - state.bassEnergy > 0.08 && now - lastFluxBeatTime > 260) {
+            lastFluxBeatTime = now;
+            spawnBeatNote(Math.floor(Math.random() * 4));
+            if (state.vibe > 65 && Math.random() < 0.45) {
+              spawnFlyingMoneyBill();
+            }
+          }
+
+          state.bassEnergy = newBass;
+          state.midEnergy = midSum / (16 * 255);
+          state.highEnergy = highSum / (24 * 255);
+        } else {
+          // Built-in Web Audio Synthesizer Sequencer
+          const track = TRACK_CONFIGS[state.selectedTrack] || TRACK_CONFIGS.papare_edm;
+          const stepDurationMs = (60 / track.bpm / 2) * 1000; // Eighth-note steps
+
+          if (now >= state.nextStepTime) {
+            state.nextStepTime = now + stepDurationMs;
+            const step = state.beatStep % 16;
+
+            if (audioCtx && !state.inIntro && !state.inGarage) {
+              // Kick on 0, 4, 8, 12 (and syncopated 14)
+              if (step % 4 === 0 || step === 14) {
+                triggerKickDrum(0.38);
+                state.bassEnergy = 0.95;
+                spawnBeatNote(step % 4 === 0 ? 0 : 3);
+              }
+              // Snare / Clap on 2, 6, 10, 14
+              if (step % 4 === 2) {
+                triggerSnareHit(0.22);
+                state.midEnergy = 0.85;
+                if (Math.random() < 0.7) spawnBeatNote(1);
+              }
+              // Melodic Papare / Baila Synth Lead
+              const noteFreq = track.melody[step % track.melody.length];
+              if (step % 2 === 0) {
+                playSynthSound(noteFreq, 'sawtooth', 0.16, 0.11);
+                state.highEnergy = 0.75;
+              } else if (Math.random() < 0.45) {
+                playSynthSound(noteFreq * 1.5, 'square', 0.1, 0.07);
+                spawnBeatNote(2);
+              }
+
+              // Crowd throws money bills during high-vibe drops!
+              if (step % 4 === 0 && state.vibe >= 55 && Math.random() < 0.65) {
+                spawnFlyingMoneyBill();
+              }
+            } else {
+              // Visual pulse even before audio context starts
+              if (step % 4 === 0) {
+                state.bassEnergy = 0.85;
+                spawnBeatNote(Math.floor(Math.random() * 4));
+              }
+            }
+
+            state.beatStep++;
+          }
+
+          // Smooth decay of equalizer energy
+          if (analyserNode && audioCtx) {
+            analyserNode.getByteFrequencyData(freqDataArray);
+          }
+          state.bassEnergy *= 0.9;
+          state.midEnergy *= 0.9;
+          state.highEnergy *= 0.9;
+        }
+      }
+
+      // Handle Player Hitting a Rhythm Beat Target (via Lane Button, Keyboard, or Master Beat Button)
+      function triggerPlayerBeatHit(preferredLane = null) {
+        ensureAudioContext();
+        const hitZoneX = 310;
+        const tolerance = 68;
+
+        // Find closest unhit note near hitZoneX
+        let bestNote = null;
+        let bestDist = Infinity;
+
+        for (let i = 0; i < state.notes.length; i++) {
+          const n = state.notes[i];
+          if (n.hit || n.missed) continue;
+          if (preferredLane !== null && n.lane !== preferredLane) continue;
+          const dist = Math.abs(n.x - hitZoneX);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestNote = n;
+          }
+        }
+
+        // If preferredLane had no close note, allow any lane within tolerance so mobile/Spacebar feels super responsive
+        if (!bestNote || bestDist > tolerance) {
+          for (let i = 0; i < state.notes.length; i++) {
+            const n = state.notes[i];
+            if (n.hit || n.missed) continue;
+            const dist = Math.abs(n.x - hitZoneX);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestNote = n;
+            }
+          }
+        }
+
+        const flashLane = preferredLane !== null ? preferredLane : (bestNote ? bestNote.lane : 0);
+        state.laneFlashes[flashLane] = 1.0;
+
+        if (bestNote && bestDist <= tolerance) {
+          bestNote.hit = true;
+          const isPerfect = bestDist <= 26;
+          state.combo++;
+          if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+          const speakerBonus = state.speakerConfig === 'mega_full' ? 1.25 : 1.1;
+          const gainedPoints = Math.round((isPerfect ? 120 : 75) * (1 + Math.min(2, state.combo * 0.05)) * speakerBonus);
+          state.score += gainedPoints;
+          if (state.score > state.highScore) state.highScore = state.score;
+
+          state.vibe = Math.min(100, state.vibe + (isPerfect ? 4.2 : 2.6));
+          state.peopleCount = Math.floor(35 + (state.vibe / 100) * 145);
+          state.bassEnergy = 1.0;
+          state.screenShake = isPerfect ? 5 : 2.5;
+
+          // Play punchy DJ synth chord hit
+          playSynthSound(isPerfect ? 587.33 : 440, 'triangle', 0.12, 0.16);
+          addPopup(
+            isPerfect ? `🔥 PERFECT BEAT! +${gainedPoints}` : `⚡ GOOD! +${gainedPoints}`,
+            310,
+            560,
+            isPerfect ? '#4ade80' : '#38bdf8',
+            16
+          );
+
+          // Spawn flying money bills when hitting streaks!
+          if (state.combo % 3 === 0 || isPerfect) {
+            spawnFlyingMoneyBill(450 + Math.random() * 520, 460);
+          }
+
+          // Update fun Sinhala/English party speech bubbles
+          if (state.combo % 6 === 0) {
+            const djQuotes = ['PARTY TIME!', 'DROP THE BASS!', 'AUTOMAKER SOUND!', 'FULL VIBE!'];
+            const uncleQuotes = ['YAMU YAMU!', 'දෙන්නම් ජම්බෝ!', 'සද්දෙ මදි මල්ලි!', 'ආතල් එක උපරිමයි!'];
+            state.djBubbleText = djQuotes[Math.floor(Math.random() * djQuotes.length)];
+            state.djBubbleTimer = 110;
+            state.uncleBubbleText = uncleQuotes[Math.floor(Math.random() * uncleQuotes.length)];
+            state.uncleBubbleTimer = 110;
+          }
+        } else {
+          // Freestyle scratch / drum hit even when between notes
+          triggerKickDrum(0.22);
+          state.vibe = Math.min(100, state.vibe + 0.5);
+        }
+      }
+
+      function drawNightSkyAndLasers() {
+        // Deep Tropical Night Sky Gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, 440);
+        skyGrad.addColorStop(0, '#040b16');
+        skyGrad.addColorStop(0.55, '#0b2239');
+        skyGrad.addColorStop(1, '#13314c');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, 1120, 440);
+
+        // Twinkling Stars & Glowing Fireflies
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        for (let i = 0; i < 28; i++) {
+          const sx = (i * 137) % 1120;
+          const sy = (i * 59) % 240;
+          const r = 1 + Math.sin(state.tick * 0.05 + i) * 0.8;
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.max(0.4, r), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Silhouette Coconut Palm Trees on Left & Right Horizon
+        const drawPalmSilhouette = (px, py, scale, flip) => {
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.scale(scale * (flip ? -1 : 1), scale);
+          ctx.strokeStyle = '#071524';
+          ctx.lineWidth = 14;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(18, -90, 34, -180);
+          ctx.stroke();
+
+          ctx.translate(34, -180);
+          ctx.fillStyle = '#071524';
+          [-2.4, -1.7, -1.0, -0.2, 0.5, 1.2, 1.9].forEach(ang => {
+            ctx.save();
+            ctx.rotate(ang);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(45, -18, 95, 12);
+            ctx.quadraticCurveTo(45, 4, 0, 0);
+            ctx.fill();
+            ctx.restore();
+          });
+          ctx.restore();
+        };
+
+        drawPalmSilhouette(55, 310, 1.1, false);
+        drawPalmSilhouette(240, 290, 1.0, true);
+        drawPalmSilhouette(350, 310, 0.85, false);
+        drawPalmSilhouette(980, 270, 1.15, true);
+
+        // Background Utility Poles & Power Wires (matching reference image!)
+        ctx.strokeStyle = '#1e293b';
+        ctx.fillStyle = '#1e293b';
+        ctx.lineWidth = 5;
+        [308, 598].forEach(poleX => {
+          ctx.fillRect(poleX - 4, 32, 8, 290);
+          ctx.save();
+          ctx.translate(poleX, 82);
+          ctx.rotate(-0.18);
+          ctx.fillRect(-26, -3, 52, 5);
+          ctx.restore();
+        });
+
+        // Overhead Power Wires
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 25);
+        ctx.quadraticCurveTo(160, 75, 308, 76);
+        ctx.quadraticCurveTo(450, 95, 598, 90);
+        ctx.quadraticCurveTo(750, 110, 920, 165);
+        ctx.stroke();
+
+        // Colorful Triangular Party Bunting Flags (Pennants) strung across the sky
+        const drawBuntingString = (x1, y1, cx, cy, x2, y2, count) => {
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.quadraticCurveTo(cx, cy, x2, y2);
+          ctx.stroke();
+
+          const flagCols = ['#facc15', '#ef4444', '#ec4899', '#22d3ee', '#f97316', '#4ade80'];
+          for (let i = 0; i < count; i++) {
+            const t = (i + 0.5) / count;
+            const bx = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * x2;
+            const by = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * y2;
+            ctx.fillStyle = flagCols[i % flagCols.length];
+            ctx.beginPath();
+            ctx.moveTo(bx - 10, by);
+            ctx.lineTo(bx + 10, by + 2);
+            ctx.lineTo(bx - 1, by + 24);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+        };
+
+        drawBuntingString(0, 90, 210, 95, 425, 4, 14);
+        drawBuntingString(310, 155, 520, 185, 760, 145, 14);
+
+        // Sweeping Stage Laser Beams shooting from the DJ Booth into the Night Sky!
+        const palette = NEON_PALETTES[state.neonMode] || NEON_PALETTES.cyber_rgb;
+        const beamCount = state.vibe > 40 ? 6 : 3;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        const lightRigPositions = [722, 782, 845, 905, 968, 1020];
+        for (let i = 0; i < beamCount; i++) {
+          const srcX = lightRigPositions[i];
+          const srcY = 235;
+          const sway = Math.sin(state.tick * 0.045 + i * 1.1) * (120 + state.bassEnergy * 95);
+          const targetX = 480 + i * 95 + sway;
+          const targetY = 0;
+          const col = palette[i % palette.length];
+
+          const beamGrad = ctx.createLinearGradient(srcX, srcY, targetX, targetY);
+          beamGrad.addColorStop(0, col);
+          beamGrad.addColorStop(0.5, col + '66');
+          beamGrad.addColorStop(1, 'transparent');
+
+          ctx.strokeStyle = beamGrad;
+          ctx.lineWidth = 8 + state.bassEnergy * 10;
+          ctx.beginPath();
+          ctx.moveTo(srcX, srcY);
+          ctx.lineTo(targetX, targetY);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawGroundDancefloor() {
+        // Earthy Outdoor Festival Ground
+        const groundGrad = ctx.createLinearGradient(0, 410, 0, 630);
+        groundGrad.addColorStop(0, '#2a1f2d');
+        groundGrad.addColorStop(0.45, '#473029');
+        groundGrad.addColorStop(1, '#291a14');
+        ctx.fillStyle = groundGrad;
+        ctx.fillRect(0, 410, 1120, 220);
+
+        // Neon Underglow Reflections under the Bus & DJ Stage
+        const palette = NEON_PALETTES[state.neonMode] || NEON_PALETTES.cyber_rgb;
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        palette.slice(0, 4).forEach((col, idx) => {
+          const gx = 210 + idx * 140 + Math.sin(state.tick * 0.05 + idx) * 20;
+          const gy = 455 + (idx % 2) * 18;
+          const rad = ctx.createRadialGradient(gx, gy, 8, gx, gy, 110 + state.bassEnergy * 45);
+          rad.addColorStop(0, col + 'aa');
+          rad.addColorStop(1, 'transparent');
+          ctx.fillStyle = rad;
+          ctx.beginPath();
+          ctx.ellipse(gx, gy, 120, 32, 0, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.restore();
+
+        // Warm Fireflies / Dust Motes kicking up from dancing feet
+        ctx.fillStyle = '#fde047';
+        for (let i = 0; i < 24; i++) {
+          const dx = (i * 89 + state.tick * 0.6) % 1100;
+          const dy = 470 + ((i * 43) % 110) - Math.abs(Math.sin(state.tick * 0.08 + i)) * 18;
+          ctx.globalAlpha = 0.35 + (i % 3) * 0.2;
+          ctx.beginPath();
+          ctx.arc(dx, dy, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawParkedDJBus() {
+        ctx.save();
+        // Bass-reactive bounce of the entire bus suspension!
+        const bassBounce = state.bassEnergy * 5.5;
+        ctx.translate(0, -bassBounce);
+
+        const isRed = state.skin === 'royal_red';
+        const isNight = state.skin === 'midnight_led';
+        const isPink = state.skin === 'anuththaravi_pink';
+        const isGold = state.skin === 'apsaravi_gold';
+        const palette = NEON_PALETTES[state.neonMode] || NEON_PALETTES.cyber_rgb;
+
+        // Primary body palette based on chosen skin
+        const mainColor = isRed
+          ? '#dc2626'
+          : isNight
+          ? '#1e1b4b'
+          : isPink
+          ? '#db2777'
+          : '#ca8a04';
+        const accentColor = isRed
+          ? '#facc15'
+          : isNight
+          ? '#38bdf8'
+          : isPink
+          ? '#f472b6'
+          : '#fde047';
+
+        // 1. Bus Shadow on the ground
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.beginPath();
+        ctx.moveTo(28, 442 + bassBounce);
+        ctx.lineTo(310, 492 + bassBounce);
+        ctx.lineTo(665, 398 + bassBounce);
+        ctx.lineTo(440, 375 + bassBounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. Front-Left Face of the Ashok Leyland Bus (x: 34..188)
+        ctx.fillStyle = mainColor;
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(42, 185); // Top-left forehead below visor
+        ctx.lineTo(182, 162); // Front-right corner pillar
+        ctx.lineTo(182, 476); // Bottom-right bumper corner
+        ctx.lineTo(34, 418);  // Bottom-left bumper corner
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Ornate Forehead Canopy / Roof Peak above Windshield
+        ctx.fillStyle = isNight ? '#0f172a' : '#b91c1c';
+        ctx.beginPath();
+        ctx.moveTo(28, 172);
+        ctx.lineTo(132, 114);
+        ctx.lineTo(222, 136);
+        ctx.lineTo(182, 162);
+        ctx.lineTo(42, 185);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Illuminated Destination Board ("මහරාජා" / "ROYAL DJ")
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(64, 146);
+        ctx.lineTo(136, 122);
+        ctx.lineTo(140, 145);
+        ctx.lineTo(66, 168);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(102, 148);
+        ctx.rotate(-0.3);
+        ctx.font = '800 11px "Noto Sans Sinhala", sans-serif';
+        ctx.fillStyle = '#7f1d1d';
+        ctx.textAlign = 'center';
+        ctx.fillText('මහරාජා DJ', 0, 3);
+        ctx.restore();
+
+        // Dual Split Front Windshields with Rainbow Tint & Hanging Garland
+        ctx.fillStyle = '#1e293b';
+        // Left pane
+        ctx.beginPath();
+        ctx.moveTo(46, 196);
+        ctx.lineTo(94, 188);
+        ctx.lineTo(92, 278);
+        ctx.lineTo(43, 278);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Right pane
+        ctx.beginPath();
+        ctx.moveTo(100, 186);
+        ctx.lineTo(164, 174);
+        ctx.lineTo(164, 276);
+        ctx.lineTo(98, 278);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Stainless Steel Ornate Mirror Bracket Frame on Front
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(35, 198);
+        ctx.lineTo(168, 176);
+        ctx.moveTo(118, 182);
+        ctx.lineTo(118, 255);
+        ctx.stroke();
+
+        // Front Grille Slats + Rainbow LED Grille (or Glowing White Lotus Emblem for Midnight LED skin!)
+        ctx.fillStyle = '#090d16';
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = accentColor;
+        ctx.beginPath();
+        ctx.moveTo(40, 304);
+        ctx.lineTo(156, 306);
+        ctx.lineTo(156, 362);
+        ctx.lineTo(40, 352);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        if (isNight) {
+          // Glowing White/Gold Lotus Mandala Emblem from 474815303_1151185206416409_6528253197314993942_n.jpg
+          ctx.save();
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 16;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(96, 334, 20, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.arc(96, 334, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Rainbow LED equalizer bars inside the front grille
+          for (let g = 0; g < 6; g++) {
+            ctx.fillStyle = palette[g % palette.length];
+            ctx.fillRect(66, 310 + g * 8, 42, 5);
+          }
+        }
+
+        // Glowing Twin Quad Headlights (Left & Right)
+        ctx.save();
+        ctx.shadowColor = '#fef08a';
+        ctx.shadowBlur = 18 + state.bassEnergy * 14;
+        ctx.fillStyle = '#fef9c3';
+        // Left pair
+        ctx.fillRect(42, 360, 24, 24);
+        // Right pair
+        ctx.fillRect(108, 372, 38, 30);
+        ctx.restore();
+
+        // Front Red/Gold Spoiler Bumper
+        ctx.fillStyle = '#b91c1c';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(32, 396);
+        ctx.lineTo(158, 438);
+        ctx.lineTo(152, 475);
+        ctx.lineTo(32, 424);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 3. Long Right Side Body of the Parked Bus Facing the Crowd (x: 182..685)
+        ctx.fillStyle = mainColor;
+        ctx.beginPath();
+        ctx.moveTo(182, 136); // Top front roof corner
+        ctx.lineTo(682, 224); // Top rear roof corner
+        ctx.lineTo(685, 382); // Bottom rear corner
+        ctx.lineTo(182, 476); // Bottom front corner
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Long Roof Banner Strip ("Automaker DJ Bus Party")
+        const roofGrad = ctx.createLinearGradient(182, 136, 682, 224);
+        roofGrad.addColorStop(0, '#ec4899');
+        roofGrad.addColorStop(0.5, '#38bdf8');
+        roofGrad.addColorStop(1, '#facc15');
+        ctx.fillStyle = roofGrad;
+        ctx.beginPath();
+        ctx.moveTo(182, 136);
+        ctx.lineTo(682, 224);
+        ctx.lineTo(682, 244);
+        ctx.lineTo(182, 166);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Open Front Passenger Entry Door with Red Steps (x: 186..244)
+        ctx.fillStyle = '#1e1b4b';
+        ctx.beginPath();
+        ctx.moveTo(186, 178);
+        ctx.lineTo(244, 184);
+        ctx.lineTo(244, 456);
+        ctx.lineTo(186, 468);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Red/Orange Illuminated Door Steps
+        ctx.fillStyle = '#dc2626';
+        for (let s = 0; s < 3; s++) {
+          ctx.fillRect(190, 396 + s * 20, 48, 14);
+          ctx.strokeRect(190, 396 + s * 20, 48, 14);
+        }
+
+        // 5 Perspective Side Passenger Windows (matching reference image!)
+        const winConfigs = [
+          { x1: 256, x2: 374, yTop1: 188, yTop2: 204, yBot1: 266, yBot2: 274, label: 'PHONE CHARGERS' },
+          { x1: 382, x2: 472, yTop1: 205, yTop2: 217, yBot1: 275, yBot2: 282, label: 'DJ SOUND SYSTEM' },
+          { x1: 480, x2: 554, yTop1: 218, yTop2: 228, yBot1: 283, yBot2: 289, label: 'AUTOMAKER VIP' },
+          { x1: 562, x2: 618, yTop1: 229, yTop2: 237, yBot1: 290, yBot2: 295, label: 'TURBO BASS' },
+          { x1: 624, x2: 668, yTop1: 238, yTop2: 244, yBot1: 296, yBot2: 300, label: 'SRI LANKA' }
+        ];
+
+        winConfigs.forEach((w, idx) => {
+          // Window Frame
+          const wGrad = ctx.createLinearGradient(w.x1, w.yTop1, w.x2, w.yBot2);
+          wGrad.addColorStop(0, '#dc2626');
+          wGrad.addColorStop(0.32, '#facc15');
+          wGrad.addColorStop(0.65, '#1e293b');
+          wGrad.addColorStop(1, '#0f172a');
+          ctx.fillStyle = wGrad;
+          ctx.beginPath();
+          ctx.moveTo(w.x1, w.yTop1);
+          ctx.lineTo(w.x2, w.yTop2);
+          ctx.lineTo(w.x2, w.yBot2);
+          ctx.lineTo(w.x1, w.yBot1);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Red Top Sticker Transom Bar
+          ctx.fillStyle = '#991b1b';
+          ctx.beginPath();
+          ctx.moveTo(w.x1, w.yTop1);
+          ctx.lineTo(w.x2, w.yTop2);
+          ctx.lineTo(w.x2, w.yTop2 + 16);
+          ctx.lineTo(w.x1, w.yTop1 + 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        });
+
+        // 4. Custom Bus Side Art / Uploaded Image Texture Banner Strip along the Mid-Body!
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(252, 286);
+        ctx.lineTo(656, 304);
+        ctx.lineTo(656, 358);
+        ctx.lineTo(252, 378);
+        ctx.closePath();
+        ctx.clip();
+
+        // If the uploaded wrap texture is loaded, draw it directly onto the bus body!
+        const activeImg = imageAssets[state.skin];
+        if (assetLoaded[state.skin] && activeImg) {
+          ctx.save();
+          ctx.transform(1, 0.04, 0, 1, 252, 282);
+          ctx.drawImage(activeImg, 0, 0, 410, 92);
+          ctx.restore();
+        } else {
+          // Crisp procedural replica of the Sinhala "අනුත්තරාවී / අප්සරාවී / Royal Edition + Automaker Turbo" side wrap
+          const sideGrad = ctx.createLinearGradient(252, 286, 656, 360);
+          if (isPink) {
+            sideGrad.addColorStop(0, '#ec4899');
+            sideGrad.addColorStop(0.5, '#9d174d');
+            sideGrad.addColorStop(1, '#db2777');
+          } else if (isGold) {
+            sideGrad.addColorStop(0, '#facc15');
+            sideGrad.addColorStop(0.5, '#ca8a04');
+            sideGrad.addColorStop(1, '#ea580c');
+          } else if (isNight) {
+            sideGrad.addColorStop(0, '#0f172a');
+            sideGrad.addColorStop(0.5, '#1e1b4b');
+            sideGrad.addColorStop(1, '#312e81');
+          } else {
+            sideGrad.addColorStop(0, '#f97316');
+            sideGrad.addColorStop(0.5, '#dc2626');
+            sideGrad.addColorStop(1, '#facc15');
+          }
+          ctx.fillStyle = sideGrad;
+          ctx.fillRect(250, 280, 415, 105);
+        }
+
+        // Bold Sinhala Script "අනුත්තරාවී" / "අප්සරාවී" & "Automaker TURBO" decal on the Bus Side (matching reference image!)
+        ctx.save();
+        ctx.translate(322, 332);
+        ctx.rotate(-0.04);
+        ctx.font = '800 24px "Noto Sans Sinhala", "Gemunu Libre", sans-serif';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 5;
+        ctx.fillStyle = isGold ? '#fef08a' : '#fbcfe8';
+        const busTitle = isGold ? 'අප්සරාවී' : 'අනුත්තරාවී';
+        ctx.strokeText(busTitle, 0, 0);
+        ctx.fillText(busTitle, 0, 0);
+
+        ctx.font = 'italic 800 12px "Inter", sans-serif';
+        ctx.fillStyle = '#fde047';
+        ctx.strokeText('Royal Edition', 4, 18);
+        ctx.fillText('Royal Edition', 4, 18);
+
+        // "Automaker TURBO intercooler" badge at x=+180
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(162, -16, 92, 34);
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 1.8;
+        ctx.strokeRect(162, -16, 92, 34);
+        ctx.font = 'italic 900 13px "Inter", sans-serif';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Automaker', 170, -1);
+        ctx.font = '800 10px "Inter", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('TURBO INTERCOOLER', 166, 12);
+        ctx.restore();
+        ctx.restore(); // End side banner clip
+
+        // 5. OPEN LUGGAGE BAY SUBWOOFER COMPARTMENT (6 Massive Pulsing Woofers inside the Bus Belly!)
+        ctx.save();
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(395, 368);
+        ctx.lineTo(582, 352);
+        ctx.lineTo(582, 412);
+        ctx.lineTo(395, 442);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw 5/6 Thumping 18" Subwoofer Cones inside the Luggage Compartment
+        const subCount = state.speakerConfig === 'horn_array' ? 3 : 5;
+        for (let s = 0; s < subCount; s++) {
+          const sx = 422 + s * 34;
+          const sy = 404 - s * 3.2;
+          const pulseR = 13 + state.bassEnergy * 4.5;
+
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = palette[s % palette.length];
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, pulseR * 0.85, pulseR, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Inner Dust Cap
+          ctx.fillStyle = '#090d16';
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, pulseR * 0.38, pulseR * 0.45, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // 6. Window-Mounted Dual Horn Tweeter Box (like 645279765_1379534504187227_3668839299575711260_n.jpg & reference image!)
+        if (state.speakerConfig === 'mega_full' || state.speakerConfig === 'horn_array') {
+          ctx.save();
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2.5;
+          // Main speaker box mounted at window rail (x: 465, y: 268)
+          ctx.fillRect(462, 266, 74, 28);
+          ctx.strokeRect(462, 266, 74, 28);
+          // Dual Horn Mouths
+          ctx.fillStyle = '#090d16';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(492, 270, 18, 20);
+          ctx.strokeRect(514, 270, 18, 20);
+          ctx.restore();
+        }
+
+        // 7. Extra Pixel LED String Lights around the Bus (Especially vibrant on Midnight LED skin!)
+        const ledDotCount = isNight ? 28 : 16;
+        for (let l = 0; l < ledDotCount; l++) {
+          const t = l / ledDotCount;
+          const lx = 186 + t * 490;
+          const ly = 166 + t * 76;
+          const col = palette[(l + Math.floor(state.tick * 0.15)) % palette.length];
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(lx, ly, isNight ? 4 : 2.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 8. Front & Rear Chrome Ashok Leyland Wheels in Perspective
+        const drawPerspectiveWheel = (wx, wy, rx, ry) => {
+          ctx.save();
+          ctx.translate(wx, wy);
+          // Rubber Tire
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Chrome Rim
+          ctx.fillStyle = '#cbd5e1';
+          ctx.beginPath();
+          ctx.ellipse(3, 0, rx * 0.56, ry * 0.56, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Lug Nuts
+          ctx.fillStyle = '#0f172a';
+          for (let i = 0; i < 8; i++) {
+            const a = (i * Math.PI) / 4 + state.tick * 0.02;
+            ctx.beginPath();
+            ctx.arc(3 + Math.cos(a) * (rx * 0.34), Math.sin(a) * (ry * 0.34), 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        };
+
+        // Front Wheel (x: 326, y: 446) & Rear Wheel (x: 616, y: 394)
+        drawPerspectiveWheel(326, 446, 38, 48);
+        drawPerspectiveWheel(616, 394, 24, 34);
+
+        // Bus Air Horn Shout Bubble when Horn Button is pressed
+        if (state.busHornTimer > 0) {
+          state.busHornTimer--;
+          ctx.save();
+          ctx.translate(150, 105);
+          ctx.rotate(-0.1);
+          ctx.font = '900 22px "Bungee", sans-serif';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 5;
+          ctx.fillStyle = '#facc15';
+          ctx.textAlign = 'center';
+          ctx.strokeText('PEEP PEEP PEEP! 📯', 0, 0);
+          ctx.fillText('PEEP PEEP PEEP! 📯', 0, 0);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      function drawOutdoorDJStage() {
+        ctx.save();
+        const palette = NEON_PALETTES[state.neonMode] || NEON_PALETTES.cyber_rgb;
+        const bassPulse = state.bassEnergy * 6;
+
+        // 1. Raised Wooden Platform & Steps on Right (x: 682..1115, y: 365..455)
+        ctx.fillStyle = '#78350f';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(682, 368);
+        ctx.lineTo(1008, 398);
+        ctx.lineTo(1112, 372);
+        ctx.lineTo(1112, 435);
+        ctx.lineTo(1008, 466);
+        ctx.lineTo(682, 412);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Wooden Support Posts holding up the Corrugated Tin Roof
+        ctx.fillStyle = '#451a03';
+        [696, 1002, 1084].forEach((postX, idx) => {
+          const topY = idx === 1 ? 158 : idx === 0 ? 182 : 210;
+          const botY = idx === 1 ? 398 : idx === 0 ? 368 : 375;
+          ctx.fillRect(postX, topY, 14, botY - topY);
+          ctx.strokeRect(postX, topY, 14, botY - topY);
+        });
+
+        // Corrugated Slanted Roof Canopy over the DJ Booth
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(666, 178);
+        ctx.lineTo(1010, 122);
+        ctx.lineTo(1116, 206);
+        ctx.lineTo(1002, 158);
+        ctx.lineTo(676, 192);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 6 Glowing Stage Spotlights hanging from the roof truss
+        const lightSpots = [
+          { x: 722, y: 222 },
+          { x: 782, y: 215 },
+          { x: 845, y: 205 },
+          { x: 905, y: 196 },
+          { x: 968, y: 186 },
+          { x: 1025, y: 235 }
+        ];
+        lightSpots.forEach((sp, i) => {
+          const col = palette[(i + Math.floor(state.tick * 0.08)) % palette.length];
+          ctx.save();
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 18;
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y, 11 + (state.bassEnergy * 3), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+
+        // 2. Animated DJ Character with Headphones & One Hand Raised Behind the Decks!
+        const djX = 885;
+        const djY = 305 - Math.abs(Math.sin(state.tick * 0.14)) * 6;
+        ctx.save();
+        ctx.translate(djX, djY);
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2.5;
+
+        // Torso (Dark Grey DJ Tee)
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.roundRect(-22, -18, 44, 46, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        // Raised Right Arm pumping to the beat
+        const armPump = Math.sin(state.tick * 0.18) * 10;
+        ctx.strokeStyle = '#c68642';
+        ctx.lineWidth = 9;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-20, -8);
+        ctx.lineTo(-38, -32 + armPump);
+        ctx.stroke();
+
+        // Left Arm on Turntable Platter
+        ctx.beginPath();
+        ctx.moveTo(20, -6);
+        ctx.lineTo(28, 16);
+        ctx.stroke();
+
+        // DJ Head & Smile
+        ctx.fillStyle = '#c68642';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, -34, 15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Neon Pink/Cyan DJ Headphones
+        ctx.strokeStyle = '#ec4899';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, -36, 17, Math.PI, 0);
+        ctx.stroke();
+        ctx.fillStyle = '#ec4899';
+        ctx.beginPath();
+        ctx.arc(-16, -33, 5, 0, Math.PI * 2);
+        ctx.arc(16, -33, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // 3. DJ Booth Front Cabinet with "Automaker" Emblem & Live Web Audio Equalizer Bars!
+        // Left Speaker Stack (x: 756, y: 318)
+        const drawBoothSpeakerTower = (sx, sy) => {
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2.5;
+          ctx.fillRect(sx, sy, 38, 76);
+          ctx.strokeRect(sx, sy, 38, 76);
+
+          // Top & Bottom Woofer Rings
+          [sy + 20, sy + 54].forEach((wy, idx) => {
+            ctx.fillStyle = '#090d16';
+            ctx.strokeStyle = palette[(idx + 1) % palette.length];
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(sx + 19, wy, (idx === 0 ? 10 : 13) + bassPulse * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+        };
+
+        drawBoothSpeakerTower(756, 312);
+        drawBoothSpeakerTower(942, 324);
+
+        // Center LED Booth Screen (x: 796..940, y: 316..396)
+        ctx.fillStyle = '#090d16';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.fillRect(796, 316, 144, 80);
+        ctx.strokeRect(796, 316, 144, 80);
+
+        // Live Web Audio Spectrum Equalizer Bars inside the DJ Booth Screen
+        const barCount = 14;
+        const barW = 136 / barCount;
+        for (let b = 0; b < barCount; b++) {
+          const val = freqDataArray[b] ? freqDataArray[b] / 255 : (0.3 + Math.sin(state.tick * 0.15 + b) * 0.25 + state.bassEnergy * 0.4);
+          const bh = Math.max(6, Math.min(72, val * 72));
+          ctx.fillStyle = palette[b % palette.length];
+          ctx.globalAlpha = 0.65;
+          ctx.fillRect(800 + b * barW, 392 - bh, barW - 2, bh);
+        }
+        ctx.globalAlpha = 1;
+
+        // Center "Automaker" Circular Emblem on the Front of the DJ Booth (matching reference image!)
+        ctx.save();
+        ctx.translate(868, 356);
+        ctx.beginPath();
+        ctx.arc(0, 0, 28 + bassPulse * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ef4444';
+        ctx.stroke();
+
+        if (assetLoaded.logo) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(0, 0, 26, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(imageAssets.logo, -26, -26, 52, 52);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath();
+          ctx.arc(0, -4, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.font = 'italic 900 10px "Inter", sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.fillText('Automaker', 0, 12);
+        }
+        ctx.restore();
+
+        // Dual DJ Turntables & Laptop on top of the Booth Counter
+        ctx.fillStyle = '#475569';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 2;
+        ctx.fillRect(808, 302, 118, 12);
+        ctx.strokeRect(808, 302, 118, 12);
+
+        // Laptop Screen
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.moveTo(946, 318);
+        ctx.lineTo(982, 298);
+        ctx.lineTo(978, 322);
+        ctx.lineTo(944, 322);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // DJ "PARTY TIME!" Speech Bubble (matching reference image!)
+        if (state.djBubbleTimer > 0) {
+          state.djBubbleTimer--;
+          ctx.save();
+          ctx.translate(796, 268);
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 44, 28, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Pointer tail toward DJ
+          ctx.beginPath();
+          ctx.moveTo(32, 16);
+          ctx.lineTo(54, 26);
+          ctx.lineTo(24, 24);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = '900 13px "Bungee", "Inter", sans-serif';
+          ctx.fillStyle = '#090d16';
+          ctx.textAlign = 'center';
+          const parts = state.djBubbleText.split(' ');
+          ctx.fillText(parts[0] || 'PARTY', 0, -3);
+          ctx.fillText(parts.slice(1).join(' ') || 'TIME!', 0, 13);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      function drawDancingCrowd() {
+        const beatBounce = Math.abs(Math.sin(state.tick * 0.16)) * (6 + state.bassEnergy * 10);
+
+        state.dancers.forEach(d => {
+          // Characters join the party as Vibe Meter rises!
+          if (state.vibe < d.minVibe) return;
+
+          ctx.save();
+          const individualBounce = Math.abs(Math.sin(state.tick * 0.15 + d.phase)) * (8 + state.bassEnergy * 8);
+          const sway = Math.sin(state.tick * 0.1 + d.phase) * 4;
+          ctx.translate(d.x + sway, d.y - individualBounce);
+          ctx.scale(d.scale, d.scale);
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          if (d.role === 'uncle_sarong_bare' || d.role === 'uncle_sarong_vest') {
+            // Iconic Sri Lankan Dancing Uncles in Sarongs (Bottom-Right Foreground, matching reference image!)
+            // Legs & Sandals
+            ctx.strokeStyle = d.skin;
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            ctx.moveTo(-12, 35);
+            ctx.lineTo(-14, 72);
+            ctx.moveTo(12, 35);
+            ctx.lineTo(14, 72);
+            ctx.stroke();
+
+            // Checkered / Plaid Sarong Wrap
+            ctx.fillStyle = d.pants;
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(-22, 6);
+            ctx.lineTo(22, 6);
+            ctx.lineTo(26, 68);
+            ctx.lineTo(-26, 68);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Plaid Sarong Grid Lines
+            ctx.strokeStyle = d.role === 'uncle_sarong_bare' ? '#1e3a8a' : '#a16207';
+            ctx.lineWidth = 1.5;
+            for (let sy = 18; sy < 64; sy += 12) {
+              ctx.beginPath();
+              ctx.moveTo(-24, sy);
+              ctx.lineTo(24, sy);
+              ctx.stroke();
+            }
+            for (let sx = -14; sx <= 14; sx += 14) {
+              ctx.beginPath();
+              ctx.moveTo(sx, 6);
+              ctx.lineTo(sx, 68);
+              ctx.stroke();
+            }
+
+            // Torso (Bare-chested Uncle or White Baniyan Vest Uncle)
+            ctx.fillStyle = d.role === 'uncle_sarong_bare' ? d.skin : '#f8fafc';
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.roundRect(-22, -42, 44, 50, 12);
+            ctx.fill();
+            ctx.stroke();
+
+            if (d.role === 'uncle_sarong_bare') {
+              // Happy Belly Line
+              ctx.beginPath();
+              ctx.arc(0, -10, 14, 0.2, Math.PI - 0.2);
+              ctx.stroke();
+            }
+
+            // Dancing Arms
+            const armWave = Math.sin(state.tick * 0.2 + d.phase) * 14;
+            ctx.strokeStyle = d.skin;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            if (d.role === 'uncle_sarong_bare') {
+              // Right hand raised holding a green Rupee note!
+              ctx.moveTo(-22, -32);
+              ctx.lineTo(-42, -68 + armWave * 0.5);
+              ctx.moveTo(22, -32);
+              ctx.lineTo(36, 4);
+            } else {
+              // Both hands grooving
+              ctx.moveTo(-22, -30);
+              ctx.lineTo(-34, -10 + armWave * 0.4);
+              ctx.moveTo(22, -30);
+              ctx.lineTo(34, -12 - armWave * 0.4);
+            }
+            ctx.stroke();
+
+            // Head with Grey Hair & White Beard/Mustache
+            ctx.fillStyle = d.skin;
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(0, -60, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // White Beard / Mustache & Big Smile
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.arc(0, -56, 13, 0.15, Math.PI - 0.15);
+            ctx.fill();
+            ctx.fillStyle = '#7f1d1d';
+            ctx.beginPath();
+            ctx.arc(0, -56, 6, 0, Math.PI);
+            ctx.fill();
+          } else {
+            // Dancing Youth & Rappers
+            const legKick = Math.sin(state.tick * 0.2 + d.phase) * 8;
+
+            // Legs / Jeans / Shorts
+            ctx.strokeStyle = d.role === 'youth_girl' ? d.skin : d.pants;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(-10, 12);
+            ctx.lineTo(-16 - legKick * 0.4, 58);
+            ctx.moveTo(10, 12);
+            ctx.lineTo(16 + legKick * 0.4, 58);
+            ctx.stroke();
+
+            // Shorts / Skirt
+            ctx.fillStyle = d.pants;
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.roundRect(-16, 4, 32, 22, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            // Shirt / Crop Top
+            ctx.fillStyle = d.shirt;
+            ctx.beginPath();
+            ctx.roundRect(-17, -36, 34, 42, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            // Raised Party Arms
+            const handWave = Math.sin(state.tick * 0.22 + d.phase) * 12;
+            ctx.strokeStyle = d.skin;
+            ctx.lineWidth = 6.5;
+            ctx.beginPath();
+            ctx.moveTo(-16, -28);
+            ctx.lineTo(-32, -62 + handWave);
+            ctx.moveTo(16, -28);
+            ctx.lineTo(32, -62 - handWave);
+            ctx.stroke();
+
+            // Head & Hair
+            ctx.fillStyle = d.skin;
+            ctx.strokeStyle = '#090d16';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.arc(0, -52, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Hair
+            ctx.fillStyle = '#1e1b4b';
+            ctx.beginPath();
+            ctx.arc(0, -56, 14, Math.PI, 0);
+            ctx.fill();
+          }
+
+          ctx.restore();
+        });
+
+        // Uncle "YAMU YAMU!" Speech Bubble on Right (matching reference image!)
+        if (state.uncleBubbleTimer > 0) {
+          state.uncleBubbleTimer--;
+          ctx.save();
+          ctx.translate(1035, 368 - beatBounce * 0.3);
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#090d16';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 68, 30, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Tail pointing down to Uncle
+          ctx.beginPath();
+          ctx.moveTo(8, 28);
+          ctx.lineTo(14, 48);
+          ctx.lineTo(24, 27);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.font = '900 16px "Bungee", "Noto Sans Sinhala", sans-serif';
+          ctx.fillStyle = '#090d16';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.uncleBubbleText, 0, 6);
+          ctx.restore();
+        }
+      }
+
+      function drawAndUpdateMoneyBills() {
+        for (let i = state.moneyBills.length - 1; i >= 0; i--) {
+          const bill = state.moneyBills[i];
+          bill.x += bill.vx + Math.sin(state.tick * 0.06 + i) * 0.45;
+          bill.y += bill.vy;
+          bill.vy += bill.gravity;
+          bill.angle += bill.spin;
+          bill.life--;
+
+          // Keep bills fluttering over the dancefloor for easy clicking
+          if (bill.y > 545) {
+            bill.y = 545;
+            bill.vy = -0.8 - Math.random() * 0.8;
+          }
+
+          ctx.save();
+          ctx.translate(bill.x, bill.y);
+          ctx.rotate(bill.angle);
+
+          // Green Rupee Banknote with Crisp White Border & Emblem
+          ctx.fillStyle = '#86efac';
+          ctx.strokeStyle = '#064e3b';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(-20, -10, 40, 20, 3);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.strokeStyle = '#16a34a';
+          ctx.lineWidth = 1.2;
+          ctx.strokeRect(-16, -7, 32, 14);
+
+          ctx.fillStyle = '#15803d';
+          ctx.beginPath();
+          ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+
+          if (bill.life <= 0) {
+            state.moneyBills.splice(i, 1);
+          }
+        }
+
+        // Update & Draw Celebration Particles
+        for (let i = state.particles.length - 1; i >= 0; i--) {
+          const pt = state.particles[i];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.alpha -= 0.03;
+          if (pt.alpha <= 0) {
+            state.particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = pt.alpha;
+          ctx.fillStyle = pt.color;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function drawHUDAndRhythmDeck() {
+        ctx.save();
+
+        // 1. TOP-LEFT "VIBE METER" (Exact match to reference artwork!)
+        ctx.font = '900 26px "Bungee", sans-serif';
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#090d16';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.strokeText('VIBE METER', 24, 38);
+        ctx.fillText('VIBE METER', 24, 38);
+
+        // Vibe Meter Outer Frame
+        const vmX = 22;
+        const vmY = 46;
+        const vmW = 236;
+        const vmH = 26;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(vmX, vmY, vmW, vmH, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Rainbow Gradient Fill inside Vibe Meter
+        const fillW = Math.max(8, ((vmW - 8) * state.vibe) / 100);
+        const vibeGrad = ctx.createLinearGradient(vmX, 0, vmX + vmW, 0);
+        vibeGrad.addColorStop(0, '#ec4899');
+        vibeGrad.addColorStop(0.35, '#f97316');
+        vibeGrad.addColorStop(0.7, '#facc15');
+        vibeGrad.addColorStop(1, '#22c55e');
+        ctx.fillStyle = vibeGrad;
+        ctx.beginPath();
+        ctx.roundRect(vmX + 4, vmY + 4, fillW, vmH - 8, 4);
+        ctx.fill();
+
+        // Glowing White Beat Marker on Vibe Meter
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#4ade80';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(vmX + 2 + fillW, vmY - 2, 4, vmH + 4);
+        ctx.shadowBlur = 0;
+
+        // 2. TOP-RIGHT "SCORE: 8520" & "PEOPLE: 150" (Exact match to reference artwork!)
+        ctx.textAlign = 'right';
+        ctx.font = '900 28px "Bungee", sans-serif';
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#090d16';
+        ctx.fillStyle = '#ffffff';
+
+        const scoreText = `SCORE: ${Math.floor(state.score)}`;
+        ctx.strokeText(scoreText, 905, 42);
+        ctx.fillText(scoreText, 905, 42);
+
+        const peopleText = `PEOPLE: ${state.peopleCount}`;
+        ctx.strokeText(peopleText, 1098, 42);
+        ctx.fillText(peopleText, 1098, 42);
+
+        // Cash & Combo Pill under Top Right HUD
+        ctx.font = '800 13px "Inter", sans-serif';
+        ctx.fillStyle = '#4ade80';
+        ctx.strokeText(`💵 CASH: Rs. ${state.cash}   🔥 COMBO: x${state.combo}`, 1096, 64);
+        ctx.fillText(`💵 CASH: Rs. ${state.cash}   🔥 COMBO: x${state.combo}`, 1096, 64);
+
+        // 3. BOTTOM INTERACTIVE DJ BEAT-MATCHING SLIDER & EQUALIZER BAR (y: 572..622)
+        const barX = 240;
+        const barY = 574;
+        const barW = 850;
+        const barH = 44;
+
+        ctx.fillStyle = 'rgba(6, 9, 19, 0.86)';
+        ctx.strokeStyle = 'rgba(236, 72, 153, 0.65)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, barW, barH, 14);
+        ctx.fill();
+        ctx.stroke();
+
+        // Left Label inside DJ Bar
+        ctx.textAlign = 'left';
+        ctx.font = '900 11px "Bungee", sans-serif';
+        ctx.fillStyle = '#facc15';
+        ctx.fillText('DJ BEAT', barX + 12, barY + 19);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('MATCHER', barX + 12, barY + 34);
+
+        // 4 Horizontal Rhythm Track Lines
+        const laneColors = ['#ec4899', '#facc15', '#22d3ee', '#4ade80'];
+        for (let l = 0; l < 4; l++) {
+          const ly = barY + 9 + l * 8.5;
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(310, ly);
+          ctx.lineTo(barX + barW - 16, ly);
+          ctx.stroke();
+        }
+
+        // Target Beat Hit Zone Ring at x = 310
+        const hitPulse = state.bassEnergy * 6;
+        ctx.save();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#22d3ee';
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.roundRect(296, barY + 4, 28, barH - 8, 8);
+        ctx.stroke();
+        ctx.restore();
+
+        // Lane Flash Feedback when Player Taps
+        for (let l = 0; l < 4; l++) {
+          if (state.laneFlashes[l] > 0.02) {
+            state.laneFlashes[l] *= 0.82;
+            ctx.fillStyle = laneColors[l];
+            ctx.globalAlpha = state.laneFlashes[l];
+            ctx.beginPath();
+            ctx.arc(310, barY + 9 + l * 8.5, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        }
+
+        // Update & Render Moving Beat Notes
+        for (let i = state.notes.length - 1; i >= 0; i--) {
+          const n = state.notes[i];
+          n.x -= n.speed;
+          const ny = barY + 9 + n.lane * 8.5;
+
+          if (!n.hit && !n.missed) {
+            ctx.save();
+            ctx.fillStyle = n.color;
+            ctx.shadowColor = n.color;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(n.x, ny, 7 + hitPulse * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(n.x, ny, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Check if note passed the hit zone without being hit
+            if (n.x < 262) {
+              n.missed = true;
+              state.combo = 0;
+              state.vibe = Math.max(12, state.vibe - 1.4);
+              state.peopleCount = Math.floor(35 + (state.vibe / 100) * 145);
+            }
+          }
+
+          if (n.x < 245 || n.hit) {
+            state.notes.splice(i, 1);
+          }
+        }
+
+        // Floating Score & Cash Popups
+        for (let i = state.popups.length - 1; i >= 0; i--) {
+          const p = state.popups[i];
+          p.y += p.vy;
+          p.life--;
+          if (p.life <= 0) {
+            state.popups.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, p.life / 15);
+          ctx.font = `900 ${p.size}px "Bungee", "Inter", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#090d16';
+          ctx.fillStyle = p.color;
+          ctx.strokeText(p.text, p.x, p.y);
+          ctx.fillText(p.text, p.x, p.y);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      function updateHeaderSummary() {
+        const skinName = SKIN_LABELS[state.skin] || 'Royal Edition';
+        const trackName = usingCustomMp3
+          ? 'Custom MP3'
+          : (TRACK_CONFIGS[state.selectedTrack]?.name || 'Papare Bass Drop');
+        activeConfigSummary.textContent = `${skinName} • ${trackName}`;
+        garageCashDisplay.textContent = `Rs. ${state.cash.toLocaleString()}`;
+        garageHighScoreDisplay.textContent = Math.floor(state.highScore);
+      }
+
+      // Garage Modal Open / Close
+      function openGarageModal() {
+        state.inGarage = true;
+        updateHeaderSummary();
+        garageModalOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      }
+
+      function closeGarageModal() {
+        ensureAudioContext();
+        state.inGarage = false;
+        garageModalOverlay.classList.add('opacity-0', 'pointer-events-none');
+        updateHeaderSummary();
+      }
+
+      // Dismiss Intro Splash -> Open Garage Menu so player can customize or jump straight in
+      function finishIntroSequence() {
+        if (!state.inIntro) return;
+        state.inIntro = false;
+        introSplashOverlay.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+          introSplashOverlay.style.display = 'none';
+          openGarageModal();
+        }, 650);
+      }
+
+      introSplashOverlay.addEventListener('click', () => {
+        ensureAudioContext();
+        finishIntroSequence();
+      });
+
+      openGarageBtn.addEventListener('click', () => {
+        openGarageModal();
+      });
+
+      startPartyBtn.addEventListener('click', () => {
+        closeGarageModal();
+        playLankanBusHorn();
+      });
+
+      muteToggleBtn.addEventListener('click', () => {
+        isMuted = !isMuted;
+        if (customAudioEl) customAudioEl.muted = isMuted;
+        muteToggleBtn.textContent = isMuted ? '🔇' : '🔊';
+      });
+
+      // Skin Card Selection
+      document.querySelectorAll('.skin-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.skin = btn.getAttribute('data-skin');
+          document.querySelectorAll('.skin-card').forEach(b => {
+            const active = b.getAttribute('data-skin') === state.skin;
+            b.className = active
+              ? 'skin-card group p-2 rounded-xl border-2 border-amber-400 bg-amber-950/35 text-left transition flex flex-col gap-1 cursor-pointer shadow-md'
+              : 'skin-card group p-2 rounded-xl border-2 border-slate-700 bg-slate-950/80 text-left transition flex flex-col gap-1 cursor-pointer';
+            const dot = b.querySelector('.skin-dot');
+            if (dot) {
+              dot.textContent = active ? '●' : '○';
+              dot.className = active ? 'skin-dot text-xs text-amber-400' : 'skin-dot text-xs text-slate-500';
+            }
+          });
+          updateHeaderSummary();
+        });
+      });
+
+      // Neon Light Setup Selection
+      document.querySelectorAll('.neon-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.neonMode = btn.getAttribute('data-neon');
+          document.querySelectorAll('.neon-btn').forEach(b => {
+            const active = b.getAttribute('data-neon') === state.neonMode;
+            b.classList.toggle('border-cyan-400', active);
+            b.classList.toggle('bg-cyan-950/40', active);
+            b.classList.toggle('border-slate-700', !active);
+            b.classList.toggle('bg-slate-950', !active);
+          });
+          updateHeaderSummary();
+        });
+      });
+
+      // Outdoor Speaker Configuration Selection
+      document.querySelectorAll('.speaker-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.speakerConfig = btn.getAttribute('data-speaker');
+          document.querySelectorAll('.speaker-btn').forEach(b => {
+            const active = b.getAttribute('data-speaker') === state.speakerConfig;
+            b.classList.toggle('border-amber-400', active);
+            b.classList.toggle('bg-amber-950/40', active);
+            b.classList.toggle('border-slate-700', !active);
+            b.classList.toggle('bg-slate-950', !active);
+          });
+          updateHeaderSummary();
+        });
+      });
+
+      // Built-in DJ Track Selection
+      document.querySelectorAll('.track-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.selectedTrack = btn.getAttribute('data-track');
+          usingCustomMp3 = false;
+          if (customAudioEl) {
+            customAudioEl.pause();
+          }
+          document.querySelectorAll('.track-btn').forEach(b => {
+            const active = b.getAttribute('data-track') === state.selectedTrack;
+            b.classList.toggle('border-emerald-400', active);
+            b.classList.toggle('bg-emerald-950/40', active);
+            b.classList.toggle('border-slate-700', !active);
+            b.classList.toggle('bg-slate-950', !active);
+          });
+          updateHeaderSummary();
+        });
+      });
+
+      // Local MP3 File Upload Handler connected to Web Audio AnalyserNode
+      mp3UploadInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        ensureAudioContext();
+        const url = URL.createObjectURL(file);
+
+        if (!customAudioEl) {
+          customAudioEl = new Audio();
+          customAudioEl.loop = true;
+          customAudioEl.crossOrigin = 'anonymous';
+          if (audioCtx && analyserNode) {
+            customAudioSource = audioCtx.createMediaElementSource(customAudioEl);
+            customAudioSource.connect(analyserNode);
+          }
+        }
+
+        customAudioEl.src = url;
+        customAudioEl.muted = isMuted;
+        customAudioEl.play().catch(() => {});
+        usingCustomMp3 = true;
+
+        const shortName = file.name.length > 22 ? file.name.slice(0, 19) + '...' : file.name;
+        uploadedFileName.textContent = `Playing: ${shortName}`;
+        QuickTrackLabel.textContent = shortName;
+        addPopup('🎵 CUSTOM MP3 LOADED!', 560, 280, '#22d3ee', 20);
+        updateHeaderSummary();
+      });
+
+      // Collect a specific Money Bill and spawn gold sparkles
+      function collectMoneyBillAtIndex(idx) {
+        const bill = state.moneyBills[idx];
+        if (!bill) return;
+        state.cash += bill.value;
+        state.score += bill.value;
+        if (state.score > state.highScore) state.highScore = state.score;
+        playCashCollectSound();
+        addPopup(`+Rs.${bill.value} 💵`, bill.x, bill.y - 10, '#4ade80', 16);
+
+        for (let p = 0; p < 8; p++) {
+          state.particles.push({
+            x: bill.x,
+            y: bill.y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            r: 3 + Math.random() * 3,
+            color: p % 2 === 0 ? '#4ade80' : '#facc15',
+            alpha: 1
+          });
+        }
+
+        state.moneyBills.splice(idx, 1);
+        updateHeaderSummary();
+      }
+
+      // Canvas Click / Tap Handler (Collect Flying Money Bills OR Hit Rhythm Beats!)
+      canvas.addEventListener('pointerdown', (e) => {
+        ensureAudioContext();
+        const rect = canvas.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 1120;
+        const y = ((e.clientY - rect.top) / rect.height) * 630;
+
+        // 1. Check if player clicked/tapped any flying money bill (generous 48px radius)
+        let collectedAny = false;
+        for (let i = state.moneyBills.length - 1; i >= 0; i--) {
+          const b = state.moneyBills[i];
+          if (Math.hypot(x - b.x, y - b.y) <= 48) {
+            collectMoneyBillAtIndex(i);
+            collectedAny = true;
+          }
+        }
+        if (collectedAny) return;
+
+        // 2. If tapped on the Bus on the left, blast the Lankan Bus Horn!
+        if (x < 350 && y > 140 && y < 440) {
+          state.busHornTimer = 50;
+          playLankanBusHorn();
+          return;
+        }
+
+        // 3. Otherwise trigger a DJ Beat Hit!
+        triggerPlayerBeatHit();
+      });
+
+      // Footer Buttons & Keyboard Controls
+      [0, 1, 2, 3].forEach(laneIdx => {
+        const btn = document.getElementById(`padBtn${laneIdx}`);
+        if (btn) {
+          btn.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            triggerPlayerBeatHit(laneIdx);
+          });
+        }
+      });
+
+      document.getElementById('masterBeatBtn').addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        triggerPlayerBeatHit();
+      });
+
+      document.getElementById('busHornBtn').addEventListener('click', () => {
+        state.busHornTimer = 55;
+        playLankanBusHorn();
+      });
+
+      document.getElementById('collectAllCashBtn').addEventListener('click', () => {
+        if (state.moneyBills.length === 0) {
+          spawnFlyingMoneyBill();
+        }
+        for (let i = state.moneyBills.length - 1; i >= 0; i--) {
+          collectMoneyBillAtIndex(i);
+        }
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (state.inIntro) {
+          finishIntroSequence();
+          return;
+        }
+        if (e.code === 'Space' || e.code === 'ArrowUp') {
+          e.preventDefault();
+          triggerPlayerBeatHit();
+        } else if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+          triggerPlayerBeatHit(0);
+        } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+          triggerPlayerBeatHit(1);
+        } else if (e.code === 'KeyD') {
+          triggerPlayerBeatHit(2);
+        } else if (e.code === 'KeyF' || e.code === 'ArrowRight') {
+          triggerPlayerBeatHit(3);
+        } else if (e.code === 'KeyH') {
+          state.busHornTimer = 55;
+          playLankanBusHorn();
+        }
+      });
+
+      function gameLoop() {
+        state.tick++;
+        updateAudioAndBeats();
+
+        ctx.save();
+        if (state.screenShake > 0.3) {
+          const sx = (Math.random() - 0.5) * state.screenShake;
+          const sy = (Math.random() - 0.5) * state.screenShake;
+          ctx.translate(sx, sy);
+          state.screenShake *= 0.84;
+        }
+
+        drawNightSkyAndLasers();
+        drawGroundDancefloor();
+        drawParkedDJBus();
+        drawOutdoorDJStage();
+        drawDancingCrowd();
+        drawAndUpdateMoneyBills();
+        drawHUDAndRhythmDeck();
+
+        ctx.restore();
+        requestAnimationFrame(gameLoop);
+      }
+
+      window.onload = function () {
+        updateHeaderSummary();
+        gameLoop();
+
+        // Automatically fade out the Automaker Intro Splash after 3.3 seconds and open the Customization Garage
+        setTimeout(() => {
+          finishIntroSequence();
+        }, 3300);
+      };
+    })();
+  </script>
+</body>
+</html>
